@@ -14,9 +14,13 @@ import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import ga.markvar.dndspellbook.adapter.SpellRWAdapter
+import ga.markvar.dndspellbook.data.Spell
+import ga.markvar.dndspellbook.data.SpellListDatabase
 import ga.markvar.dndspellbook.placeholder.PlaceholderContent;
 import ga.markvar.dndspellbook.databinding.FragmentItemListBinding
 import ga.markvar.dndspellbook.databinding.ItemListContentBinding
+import kotlin.concurrent.thread
 
 /**
  * A Fragment representing a list of Pings. This fragment
@@ -56,7 +60,7 @@ class ItemListFragment : Fragment() {
         }
 
     private var _binding: FragmentItemListBinding? = null
-
+    private lateinit var database: SpellListDatabase
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -67,8 +71,9 @@ class ItemListFragment : Fragment() {
     ): View? {
 
         _binding = FragmentItemListBinding.inflate(inflater, container, false)
-        return binding.root
 
+        database = SpellListDatabase.getDatabase(applicationContext = requireContext())
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -122,78 +127,22 @@ class ItemListFragment : Fragment() {
         onClickListener: View.OnClickListener,
         onContextClickListener: View.OnContextClickListener
     ) {
-
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(
-            PlaceholderContent.ITEMS,
+        val adapter = SpellRWAdapter(
             onClickListener,
             onContextClickListener
         )
+        recyclerView.adapter = adapter
+        loadItemsInBackground(adapter)
     }
 
-    class SimpleItemRecyclerViewAdapter(
-        private val values: List<PlaceholderContent.PlaceholderItem>,
-        private val onClickListener: View.OnClickListener,
-        private val onContextClickListener: View.OnContextClickListener
-    ) :
-        RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
+    private fun loadItemsInBackground(adapter: SpellRWAdapter) {
+        thread {
+            val items = database.spellDao().getAll()
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-
-            val binding =
-                ItemListContentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return ViewHolder(binding)
-
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val item = values[position]
-            holder.idView.text = item.id
-            holder.contentView.text = item.content
-
-            with(holder.itemView) {
-                tag = item
-                setOnClickListener(onClickListener)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    setOnContextClickListener(onContextClickListener)
-                }
-
-                setOnLongClickListener { v ->
-                    // Setting the item id as the clip data so that the drop target is able to
-                    // identify the id of the content
-                    val clipItem = ClipData.Item(item.id)
-                    val dragData = ClipData(
-                        v.tag as? CharSequence,
-                        arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN),
-                        clipItem
-                    )
-
-                    if (Build.VERSION.SDK_INT >= 24) {
-                        v.startDragAndDrop(
-                            dragData,
-                            View.DragShadowBuilder(v),
-                            null,
-                            0
-                        )
-                    } else {
-                        v.startDrag(
-                            dragData,
-                            View.DragShadowBuilder(v),
-                            null,
-                            0
-                        )
-                    }
-                }
+            requireActivity().runOnUiThread {
+                adapter.update(items)
             }
         }
-
-        override fun getItemCount() = values.size
-
-        inner class ViewHolder(binding: ItemListContentBinding) :
-            RecyclerView.ViewHolder(binding.root) {
-            val idView: TextView = binding.idText
-            val contentView: TextView = binding.content
-        }
-
     }
 
     override fun onDestroyView() {
