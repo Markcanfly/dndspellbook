@@ -1,5 +1,6 @@
 package ga.markvar.dndspellbook
 
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.google.android.material.appbar.CollapsingToolbarLayout
@@ -10,7 +11,6 @@ import android.widget.TextView
 import ga.markvar.dndspellbook.data.Spell
 import ga.markvar.dndspellbook.data.SpellListDatabase
 import ga.markvar.dndspellbook.databinding.FragmentItemDetailBinding
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -30,7 +30,7 @@ class ItemDetailFragment : Fragment() {
 
     lateinit var itemDetailTextView: TextView
     private var toolbarLayout: CollapsingToolbarLayout? = null
-    private lateinit var index_name: String
+    private lateinit var index_name: String // Used only when building view
 
     private var _binding: FragmentItemDetailBinding? = null
 
@@ -50,20 +50,24 @@ class ItemDetailFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         arguments?.let {
             if (it.containsKey(ARG_ITEM_ID)) {
-                // Load the placeholder content specified by the fragment
-                // arguments. In a real-world scenario, use a Loader
-                // to load content from a content provider.
+                // Async load item
                 index_name = it.getString(ARG_ITEM_ID)!!
             }
         }
     }
 
-    private fun getSpellFromDb(index_name: String): Spell {
+    private fun updateSpellFromDb(index_name: String) {
         val database = SpellListDatabase.getDatabase(requireContext())
         val spellDao = database.spellDao()
-        return spellDao.get(index_name)!!
+        thread {
+            item = spellDao.get(index_name)!!
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !requireContext().mainLooper.isCurrentThread) {
+                updateContent()
+            }
+        }.join()
     }
 
     override fun onCreateView(
@@ -77,22 +81,20 @@ class ItemDetailFragment : Fragment() {
         toolbarLayout = binding.toolbarLayout
         itemDetailTextView = binding.itemDetail
 
-        //updateContent()
+        updateSpellFromDb(index_name)
+
         //rootView.setOnDragListener(dragListener)
 
         return rootView
     }
 
     private fun updateContent() {
-        thread {
-            item = getSpellFromDb(index_name)
+        // Check if this is still the fragment we launched the thread on
+        toolbarLayout?.title = item?.name
 
-            toolbarLayout?.title = item?.name
-
-            // Show the placeholder content as text in a TextView.
-            item?.let {
-                itemDetailTextView.text = it.description
-            }
+        // Show the placeholder content as text in a TextView.
+        item?.let {
+            itemDetailTextView.text = it.description
         }
     }
 

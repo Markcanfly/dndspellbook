@@ -1,14 +1,10 @@
 package ga.markvar.dndspellbook
 
-import android.content.ClipData
-import android.content.ClipDescription
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
@@ -17,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import ga.markvar.dndspellbook.adapter.SpellRWAdapter
 import ga.markvar.dndspellbook.data.Spell
 import ga.markvar.dndspellbook.data.SpellListDatabase
-import ga.markvar.dndspellbook.placeholder.PlaceholderContent;
 import ga.markvar.dndspellbook.databinding.FragmentItemListBinding
 import ga.markvar.dndspellbook.databinding.ItemListContentBinding
 import kotlin.concurrent.thread
@@ -111,10 +106,10 @@ class ItemListFragment : Fragment() {
          * experience on larger screen devices
          */
         val onContextClickListener = View.OnContextClickListener { v ->
-            val item = v.tag as PlaceholderContent.PlaceholderItem
+            val item = v.tag as Spell
             Toast.makeText(
                 v.context,
-                "Context click of item " + item.id,
+                "Context click of item " + item.name,
                 Toast.LENGTH_LONG
             ).show()
             true
