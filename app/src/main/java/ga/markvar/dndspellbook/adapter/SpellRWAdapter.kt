@@ -27,7 +27,8 @@ class SpellRWAdapter(
     override fun onBindViewHolder(holder: SpellRWAdapter.ViewHolder, position: Int) {
         val item = values[position]
         holder.idView.text = item.name
-        holder.contentView.text = item.classes /* Extend this for more info at a glance */
+        val itemlvl = item.level
+        holder.contentView.text = "Lv$itemlvl" /* Extend this for more info at a glance */
 
         with(holder.itemView) {
             tag = item
