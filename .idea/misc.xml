@@ -3,7 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Programming/Android/dndspellbook/app/src/main/res/layout-sw600dp/fragment_item_detail.xml" value="0.2033282325937261" />
+        <entry key="..\:/Programming/Android/dndspellbook/app/src/main/res/layout/activity_item_detail.xml" value="0.2692502532928065" />
         <entry key="..\:/Programming/Android/dndspellbook/app/src/main/res/layout/fragment_item_detail.xml" value="0.2477355072463768" />
+        <entry key="..\:/Programming/Android/dndspellbook/app/src/main/res/layout/fragment_item_list.xml" value="0.2692502532928065" />
         <entry key="..\:/Programming/Android/dndspellbook/app/src/main/res/layout/item_list_content.xml" value="0.2695035460992908" />
       </map>
     </option>

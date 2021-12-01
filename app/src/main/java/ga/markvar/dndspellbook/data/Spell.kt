@@ -27,4 +27,30 @@ data class Spell (
     @ColumnInfo(name = "ritual")            var ritual:         Boolean,
     @ColumnInfo(name = "school")            var school:         String,
     @ColumnInfo(name = "url")               var url:            String
-)
+) {
+    fun buildDetails(): String {
+        var str = ""
+        str += "Level $level\n"
+        str += if (!concentration) "Casting time: $castingTime\n" else "Casting time: $castingTime, concentration\n"
+        if (ritual) str += "Ritual\n"
+        str += "Range: $range\n"
+        str += "Components: $components\n"
+        str += "Duration: $duration\n"
+        if (material != null)           str += "Material: $material\n"
+        if (areaOfEffect != null)       str += "Area of Effect: $areaOfEffect\n"
+        if (attackType != null)         str += "Type: $attackType\n"
+        if (damage != null)             str += "Damage: $damage\n"
+        if (healAtSlotLevel != null)    str += "Healing for slot level: $healAtSlotLevel\n"
+        if (dc != null)                 str += "DC: $dc\n"
+
+        str += "\nDescription: $description\n"
+
+        if (higherLevel != null)        str += "\nHigher levels: $higherLevel\n"
+        str += "\nSchool: $school\n"
+        val fClasses = classes.split(",").joinToString(separator = ", ") { cls -> cls.replaceFirstChar { it.uppercase() }}
+        str += "Classes: $fClasses\n"
+
+        return str
+    }
+    val details: String get() = buildDetails()
+}

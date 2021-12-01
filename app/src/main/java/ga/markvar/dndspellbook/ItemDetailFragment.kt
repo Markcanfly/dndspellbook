@@ -11,8 +11,6 @@ import android.widget.TextView
 import ga.markvar.dndspellbook.data.Spell
 import ga.markvar.dndspellbook.data.SpellListDatabase
 import ga.markvar.dndspellbook.databinding.FragmentItemDetailBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 /**
@@ -94,7 +92,7 @@ class ItemDetailFragment : Fragment() {
 
         // Show the placeholder content as text in a TextView.
         item?.let {
-            itemDetailTextView.text = it.description
+            itemDetailTextView.text = it.details
         }
     }
 
