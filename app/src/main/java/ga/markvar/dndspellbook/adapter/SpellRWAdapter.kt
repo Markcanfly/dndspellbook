@@ -31,7 +31,12 @@ class SpellRWAdapter(
 
         with(holder.itemView) {
             tag = item
-            setOnClickListener { v ->
+            setOnClickListener(onClickListener)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                setOnContextClickListener(onContextClickListener)
+            }
+
+            setOnLongClickListener { v ->
                 // Implement drag and drop data through the ClipData API
                 val clipItem = ClipData.Item(item.name)
                 val dragData = ClipData(
