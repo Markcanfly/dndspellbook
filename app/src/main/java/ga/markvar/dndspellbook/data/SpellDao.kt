@@ -13,6 +13,9 @@ interface SpellDao {
     @Query("SELECT * FROM spell WHERE index_name=:index_name")
     fun get(index_name: String): Spell?
 
+    @Query("SELECT * FROM spell WHERE (classes LIKE '%'||:query||'%') OR (name LIKE '%'||:query||'%') OR (level LIKE :query)")
+    fun search(query: String): List<Spell>
+
     @Insert
     fun insert(spell: Spell): Long
 

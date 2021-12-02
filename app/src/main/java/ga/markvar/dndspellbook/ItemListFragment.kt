@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.ViewCompat
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
@@ -114,6 +115,7 @@ class ItemListFragment : Fragment() {
             ).show()
             true
         }
+
         setupRecyclerView(recyclerView, onClickListener, onContextClickListener)
     }
 
@@ -127,11 +129,31 @@ class ItemListFragment : Fragment() {
             onContextClickListener
         )
         recyclerView.adapter = adapter
+
+        /**
+         * Search bar text change listener to update the RecyclerView
+         */
+        binding.searchBar!!.doOnTextChanged { text, _, _, _ ->
+            updateRWForSearch(adapter, text.toString())
+        }
+
         loadItemsInBackground(adapter)
+    }
+
+    private fun updateRWForSearch(adapter: SpellRWAdapter, query: String) {
+        thread {
+            val items = database.spellDao().search(query)
+
+            requireActivity().runOnUiThread {
+                adapter.update(items)
+            }
+        }
     }
 
     private fun loadItemsInBackground(adapter: SpellRWAdapter) {
         thread {
+
+
             val items = database.spellDao().getAll()
 
             requireActivity().runOnUiThread {
