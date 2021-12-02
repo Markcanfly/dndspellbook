@@ -5,6 +5,8 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.widget.doOnTextChanged
@@ -13,6 +15,7 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import ga.markvar.dndspellbook.adapter.SpellRWAdapter
 import ga.markvar.dndspellbook.data.Spell
+import ga.markvar.dndspellbook.data.SpellDao
 import ga.markvar.dndspellbook.data.SpellListDatabase
 import ga.markvar.dndspellbook.databinding.FragmentItemListBinding
 import ga.markvar.dndspellbook.databinding.ItemListContentBinding
@@ -27,7 +30,7 @@ import kotlin.concurrent.thread
  * item details side-by-side using two vertical panes.
  */
 
-class ItemListFragment : Fragment() {
+class ItemListFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
     /**
      * Method to intercept global key events in the
@@ -60,6 +63,8 @@ class ItemListFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+
+    private lateinit var spellRWAdapter: SpellRWAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -116,6 +121,20 @@ class ItemListFragment : Fragment() {
             true
         }
 
+        /**
+         * Setup Sort Mode Selector spinner
+         */
+        ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.sort_types,
+            android.R.layout.simple_spinner_item,
+        ).also { adapter ->
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            binding.sortType?.adapter = adapter
+        }
+
+        binding.sortType?.onItemSelectedListener = this
+
         setupRecyclerView(recyclerView, onClickListener, onContextClickListener)
     }
 
@@ -129,33 +148,32 @@ class ItemListFragment : Fragment() {
             onContextClickListener
         )
         recyclerView.adapter = adapter
-
+        spellRWAdapter = adapter
         /**
          * Search bar text change listener to update the RecyclerView
          */
-        binding.searchBar!!.doOnTextChanged { text, _, _, _ ->
-            updateRWForSearch(adapter, text.toString())
+        binding.searchBar?.doOnTextChanged { text, _, _, _ ->
+            updateRW(adapter)
         }
 
-        loadItemsInBackground(adapter)
+        updateRW(adapter)
     }
 
-    private fun updateRWForSearch(adapter: SpellRWAdapter, query: String) {
-        thread {
-            val items = database.spellDao().search(query)
+    private val orderBy: String get() = when(binding.sortType?.selectedItem.toString()) {
+            "Alphabetical"  -> SpellDao.ALPHABETICAL
+            "Level"         -> SpellDao.LEVEL
+            else            -> SpellDao.ALPHABETICAL
+    }
 
-            requireActivity().runOnUiThread {
-                adapter.update(items)
+    private fun updateRW(adapter: SpellRWAdapter) {
+        thread {
+            val dao = database.spellDao()
+            val query = binding.searchBar?.text.toString()
+            val items = when (orderBy) {
+                SpellDao.ALPHABETICAL   -> if (query != "") dao.search(query) else dao.getAll()
+                SpellDao.LEVEL          -> if (query != "") dao.searchSortedByLevel(query) else dao.getAllSortedByLevel()
+                else                    -> if (query != "") dao.search(query) else dao.getAll()
             }
-        }
-    }
-
-    private fun loadItemsInBackground(adapter: SpellRWAdapter) {
-        thread {
-
-
-            val items = database.spellDao().getAll()
-
             requireActivity().runOnUiThread {
                 adapter.update(items)
             }
@@ -165,5 +183,13 @@ class ItemListFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        updateRW(spellRWAdapter)
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+        updateRW(spellRWAdapter)
     }
 }
